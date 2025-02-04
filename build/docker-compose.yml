@@ -1,0 +1,91 @@
+services:
+  weaviate:
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --scheme
+      - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.28.2
+    ports:
+      - 8081:8080
+      - 50051:50051
+    volumes:
+      - ../data/weaviate:/var/lib/weaviate
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      ENABLE_MODULES: ""
+      CLUSTER_HOSTNAME: "node1"
+
+  unstructured:
+    image: quay.io/unstructured-io/unstructured-api:0.0.82
+    container_name: unstructured
+    platform: linux/amd64
+    environment:
+      UNSTRUCTURED_MEMORY_FREE_MINIMUM_MB: 512
+      UNSTRUCTURED_PARALLEL_MODE_ENABLED: true
+      UNSTRUCTURED_PARALLEL_MODE_URL: http://unstructured:8000/general/v0/general
+      UNSTRUCTURED_API_KEY: ${UNSTRUCTURED_API_KEY:-unstructuredapikey}
+      ENV: dev
+    ports:
+      - 8800:8000
+    volumes:
+      - ../data/unstructured:/app
+    mem_limit: 8g
+    cpus: 4
+
+  postgres:
+    image: postgres:16
+    restart: always
+    volumes:
+      - ../data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secretpgpassword}
+    ports:
+      - "5432:5432"
+
+  temporal:
+    container_name: temporal
+    depends_on:
+      - postgres
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=${POSTGRES_PASSWORD:-secretpgpassword}
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=./config/dynamicconfig/development-sql.yml
+    image: temporalio/auto-setup:1.26.2
+    ports:
+      - 7233:7233
+    volumes:
+      - ./config/temporal:/etc/temporal/config/dynamicconfig
+
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:2.34.0
+    ports:
+      - 8233:8080
+
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    entrypoint: sh
+    command: -c 'mkdir -p /data/files && minio server --console-address :9001 /data'
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-storage-access-key}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-storage-secret-key}
+    ports:
+      - ${MINIO_PORT:-9000}:9000
+      - ${MINIO_CONSOLE_PORT:-9001}:9001
+    volumes:
+      - ../data/minio:/data

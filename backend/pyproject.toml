@@ -1,0 +1,86 @@
+[project]
+name = "study-session-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.36.12",
+    "fastapi>=0.115.8",
+    "langchain-ollama>=0.2.3",
+    "langchain-openai>=0.3.3",
+    "langgraph>=0.2.69",
+    "llama-index>=0.12.15",
+    "llama-index-embeddings-azure-openai>=0.3.0",
+    "llama-index-embeddings-ollama>=0.5.0",
+    "llama-index-embeddings-openai>=0.3.1",
+    "llama-index-llms-ollama>=0.5.0",
+    "llama-index-readers-file>=0.4.4",
+    "llama-index-vector-stores-weaviate>=1.3.1",
+    "pydantic-settings>=2.7.1",
+    "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.20",
+    "temporalio>=1.9.0",
+    "unstructured>=0.16.17",
+    "uvicorn>=0.34.0",
+]
+classifiers = ["Private :: Do Not Upload"]
+
+[dependency-groups]
+dev = ["jupyterlab>=4.3.5", "pyright>=1.1.393", "ruff>=0.9.4"]
+
+[tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "gql",
+]
+
+target-version = "py312"
+
+lint.select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+
+lint.ignore = [
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+    "W191", # indentation contains tabs
+]
+
+[tool.ruff.lint.isort]
+known-third-party = ["pydantic"]
+
+[tool.pyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.12"
+reportMissingImports = "error"
+reportMissingTypeStubs = false
+exclude = ["**/__pycache__"]
+include = ["./src"]

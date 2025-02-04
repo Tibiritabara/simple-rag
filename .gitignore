@@ -1,0 +1,6 @@
+.env
+data/db
+data/minio
+data/unstructured
+data/weaviate
+
